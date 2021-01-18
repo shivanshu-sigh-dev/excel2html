@@ -113,12 +113,6 @@ public class ConversionWorker extends SwingWorker<Void, Void>{
                         if(!"".equals(currentTr.child(15).text())){
                             currentTr.after(this.domUtils.getNewRow(currentTr.child(0).text(), currentTr.child(1).text(), "informative", currentTr.child(4).text(), clauseType, "", currentTr.child(15).text(), currentTr.child(18).text(), "", ""));
                         }
-                        String companionGuidelineText = currentTr.child(14).text();
-                        if("".equals(currentTr.child(8).text())){
-                            currentTr.child(8).html("<p><em>" + companionGuidelineText + "<em></p>");
-                        } else {
-                            currentTr.child(8).html("<p>" + currentTr.child(8).text() + "</p><p><em>" + companionGuidelineText + "<em></p>");
-                        }   
                         currentTr.child(15).text("");
                         currentTr.child(17).text("");
                         currentTr.child(19).text("");
@@ -213,12 +207,13 @@ public class ConversionWorker extends SwingWorker<Void, Void>{
         this.domUtils.deleteColumn(mainTable, 3);
         this.domUtils.deleteColumn(mainTable, 3);
         this.domUtils.deleteColumn(mainTable, 10);
-        this.domUtils.deleteColumn(mainTable, 19);
+        this.domUtils.deleteColumn(mainTable, 11);
+        this.domUtils.deleteColumn(mainTable, 11);
+        this.domUtils.deleteColumn(mainTable, 13);
+        this.domUtils.deleteColumn(mainTable, 17);
         this.domUtils.renameColumn(mainTable, "polarionWi", "clauseType");
         this.domUtils.renameColumn(mainTable, "name", "paragraphNumber");
-        this.domUtils.renameColumn(mainTable, "requirementType", "jamaRequirementType");
         this.domUtils.renameColumn(mainTable, "title", "jamaTitle");
-        this.domUtils.renameColumn(mainTable, "action", "jamaAction");
         
         // write the DOM to a html file
         FileWriter fileWriter = new FileWriter(htmlFile);
