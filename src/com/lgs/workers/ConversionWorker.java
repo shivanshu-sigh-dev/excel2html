@@ -7,7 +7,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.InputStream;
+import java.util.concurrent.ExecutionException;
 import javax.swing.JButton;
+import javax.swing.JOptionPane;
 import javax.swing.JTextArea;
 import javax.swing.SwingWorker;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -30,6 +32,9 @@ public class ConversionWorker extends SwingWorker<Void, Void>{
     
     private final DOMUtils domUtils = DOMUtils.getInstance();
     
+    private String processedExcelFilePath = null;
+    private File htmlFile = null;
+    
     // Constructor to initialize the global objects.
     public ConversionWorker(String selectedFilePath, JTextArea infoTextArea, JButton fileSelectorButton){
         this.selectedFilePath = selectedFilePath;
@@ -44,19 +49,19 @@ public class ConversionWorker extends SwingWorker<Void, Void>{
     @Override
     protected Void doInBackground() throws Exception {
         ExcelToHtmlConverterImpl excelToHtmlConverter = new ExcelToHtmlConverterImpl(DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument());
-        String processedExcelFilePath = excelToHtmlConverter.processExcelFile(this.selectedFilePath);
+        this.processedExcelFilePath = excelToHtmlConverter.processExcelFile(this.selectedFilePath);
         this.setProgress(20);
-        InputStream inputStream = new FileInputStream(processedExcelFilePath);
+        InputStream inputStream = new FileInputStream(this.processedExcelFilePath);
         HSSFWorkbook excelWorkBook = new HSSFWorkbook(inputStream);
         excelToHtmlConverter.processSheet(excelWorkBook.getSheetAt(0));
         this.setProgress(30);
-        excelToHtmlConverter.extractImages(excelWorkBook, processedExcelFilePath.substring(processedExcelFilePath.lastIndexOf("_") + 1, processedExcelFilePath.lastIndexOf(".")));
+        excelToHtmlConverter.extractImages(excelWorkBook, this.processedExcelFilePath.substring(this.processedExcelFilePath.lastIndexOf("_") + 1, this.processedExcelFilePath.lastIndexOf(".")));
         excelToHtmlConverter.filterDocument(excelToHtmlConverter.getDocument());
         this.setProgress(40);
         ByteArrayOutputStream documentStream = excelToHtmlConverter.getDocumentStream(excelToHtmlConverter.getDocument());
-        String htmlFilePath = excelToHtmlConverter.writeStreamToFile(documentStream, processedExcelFilePath.substring(processedExcelFilePath.lastIndexOf("\\") + 1, processedExcelFilePath.lastIndexOf(".")) + ".html");
+        String htmlFilePath = excelToHtmlConverter.writeStreamToFile(documentStream, this.processedExcelFilePath.substring(this.processedExcelFilePath.lastIndexOf("\\") + 1, this.processedExcelFilePath.lastIndexOf(".")) + ".html");
         
-        File htmlFile = new File(htmlFilePath);
+        this.htmlFile = new File(htmlFilePath);
         Document jsoupHtmlDocument = Jsoup.parse(htmlFile, "ISO-8859-1", "");
         jsoupHtmlDocument.outputSettings().escapeMode(Entities.EscapeMode.xhtml);
         
@@ -210,7 +215,7 @@ public class ConversionWorker extends SwingWorker<Void, Void>{
         this.domUtils.deleteColumn(mainTable, 11);
         this.domUtils.deleteColumn(mainTable, 11);
         this.domUtils.deleteColumn(mainTable, 13);
-        this.domUtils.deleteColumn(mainTable, 17);
+        this.domUtils.deleteColumn(mainTable, 16);
         this.domUtils.renameColumn(mainTable, "polarionWi", "clauseType");
         this.domUtils.renameColumn(mainTable, "name", "paragraphNumber");
         this.domUtils.renameColumn(mainTable, "title", "jamaTitle");
@@ -221,7 +226,7 @@ public class ConversionWorker extends SwingWorker<Void, Void>{
         fileWriter.flush();
         
         // Delete the temp excel file.
-        new File(processedExcelFilePath).delete();
+        new File(this.processedExcelFilePath).delete();
         
         // once everything is done, update the app.
         this.infoTextArea.setText(this.infoTextArea.getText() + "\nConverted File: " + htmlFile.getAbsolutePath());
@@ -229,5 +234,23 @@ public class ConversionWorker extends SwingWorker<Void, Void>{
         this.setProgress(100);
         
         return null;
+    }
+
+    @Override
+    protected void done() {
+        try{
+            get();
+        } catch (InterruptedException | ExecutionException ex) {
+            if(this.processedExcelFilePath != null){
+                new File(this.processedExcelFilePath).delete();
+            }
+            if(this.htmlFile != null){
+                this.htmlFile.delete();
+            }
+            int userInput = JOptionPane.showOptionDialog(null, "The conversion was not completed. There is something wrong with the provided excel document.", "Error", JOptionPane.OK_CANCEL_OPTION, JOptionPane.ERROR_MESSAGE, null, null, null);
+            if(userInput == JOptionPane.OK_OPTION || userInput == JOptionPane.CANCEL_OPTION){
+                System.exit(0);
+            }
+        }
     }
 }
