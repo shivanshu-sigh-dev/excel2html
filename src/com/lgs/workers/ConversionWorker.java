@@ -95,7 +95,7 @@ public class ConversionWorker extends SwingWorker<Void, Void>{
             if(currentTr.childrenSize() >= 6){
                 boolean isAmendmentAdded = true;
                 String clauseType = currentTr.child(5).text().trim();
-                if(currentTr.child(8).text().trim().length() == 0){
+                if(currentTr.child(8).text().trim().length() == 0 && !"Terms and Definitions".equals(clauseType)){
                     if(currentTr.child(21).text().trim().length() == 0){
                         currentTr.child(8).text(currentTr.child(7).text());
                     } else {
@@ -139,8 +139,8 @@ public class ConversionWorker extends SwingWorker<Void, Void>{
                         if(isAmendmentAdded){
                             currentTr.child(23).text("invokes:JamaTestImport/" + currentTr.child(18).text() + "A" + ",parent:JamaTestImport/" + currentTr.child(18).text() + "A");
                         }
+                        currentTr.child(7).html("<p>" + currentTr.child(22).text() + "</p><p>" + currentTr.child(7).text() + "</p>");
                         currentTr.child(21).html("<p>" + currentTr.child(7).text() + "</p><p>" + currentTr.child(21).text() + "</p>");
-                        currentTr.child(7).text("");
                         break;
                     case "Folder":
                         currentTr.child(2).text("heading " + currentTr.child(4).text().chars().filter(character -> character == '.').count());
@@ -155,7 +155,7 @@ public class ConversionWorker extends SwingWorker<Void, Void>{
                             currentTr.child(23).text("invokes:JamaTestImport/" + currentTr.child(18).text() + "A" + ",parent:JamaTestImport/" + currentTr.child(18).text() + "A");
                         }
                         currentTr.child(21).html("<p>" + currentTr.child(7).text() + "</p><p>" + currentTr.child(21).text() + "</p>");
-                        currentTr.child(7).text("");
+                        currentTr.child(7).html("<p>" + currentTr.child(7).text() + "</p><p>" + currentTr.child(21).text() + "</p>");
                         break;
                     case "Terms and Definitions":
                         currentTr.child(2).text("definition");
@@ -217,7 +217,7 @@ public class ConversionWorker extends SwingWorker<Void, Void>{
         this.domUtils.deleteColumn(mainTable, 13);
         this.domUtils.deleteColumn(mainTable, 16);
         this.domUtils.renameColumn(mainTable, "polarionWi", "clauseType");
-        this.domUtils.renameColumn(mainTable, "name", "paragraphNumber");
+        this.domUtils.renameColumn(mainTable, "name", "jamaParagraphNumber");
         this.domUtils.renameColumn(mainTable, "title", "jamaTitle");
         
         // write the DOM to a html file
